@@ -93,6 +93,7 @@
       - ReadingListApplicationTests.java：一个基本的集成测试类。
 
       * ##### 2.1.1.1 启动引导 Spring
+
       ```java
       package readinglist;
 
@@ -140,38 +141,46 @@
           <version>2.4.3</version>
       </dependency>
       ```
-      * ##### 2.1.1.2 测试Spring Boot应用程序
-      ```java
-      package readinglist; 
 
-      import org.junit.Test; 
-      import org.junit.runner.RunWith; 
-      import org.springframework.boot.test.SpringApplicationConfiguration; 
-      import org.springframework.test.context.junit4.SpringJUnit4ClassRunner; 
+      - ##### 2.1.1.2 测试 Spring Boot 应用程序
+
+      ```java
+      package readinglist;
+
+      import org.junit.Test;
+      import org.junit.runner.RunWith;
+      import org.springframework.boot.test.SpringApplicationConfiguration;
+      import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
       import org.springframework.test.context.web.WebAppConfiguration;
 
-      import readinglist.ReadingListApplication; 
+      import readinglist.ReadingListApplication;
 
-      @RunWith(SpringJUnit4ClassRunner.class) 
+      @RunWith(SpringJUnit4ClassRunner.class)
       @SpringApplicationConfiguration(classes = ReadingListApplication.class) // 通过Spring Boot加载上下文
-      @WebAppConfiguration 
-      public class ReadingListApplicationTests { 
-        @Test 
+      @WebAppConfiguration
+      public class ReadingListApplicationTests {
+        @Test
         public void contextLoads() { // 测试加载的上下
-        } 
+        }
       }
       ```
-      ReadingListApplicationTests 使用 @SpringApplicationConfiguration 注解从 ReadingListApplication 配置类里加载Spring应用程序上下文。
-      * ##### 2.1.1.3 配置应用程序属性
-      使用 application.yml 配置 spring 例如:
+
+      ReadingListApplicationTests 使用 @SpringApplicationConfiguration 注解从 ReadingListApplication 配置类里加载 Spring 应用程序上下文。
+
+      - ##### 2.1.1.3 配置应用程序属性
+        使用 application.yml 配置 spring 例如:
+
       ```yml
       server:
-        port: 8000 # 设置应用程序的启动端口 
+        port: 8000 # 设置应用程序的启动端口
       ```
+
     - #### 2.1.2 Spring Boot 项目构建过程解析
-      可以选择Gradle或Maven作为构建工具
+
+      可以选择 Gradle 或 Maven 作为构建工具
 
       - build.gradle
+
       ```gradle
       buildscript {
           ext {
@@ -204,7 +213,7 @@
       }
 
       dependencies {
-          compile("org.springframework.boot:spring-boot-starter-actuator") // 
+          compile("org.springframework.boot:spring-boot-starter-actuator") //
           compile("org.springframework.boot:spring-boot-starter-web")
           compile("org.springframework.boot:spring-boot-starter-data-jpa")
           compile("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -223,7 +232,9 @@
           gradleVersion = '3.5.1'
       }
       ```
+
       - pom.xml
+
       ```xml
       <?xml version="1.0" encoding="UTF-8"?>
       <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -279,7 +290,315 @@
                   </plugin>
               </plugins>
           </build>
-      </project> 
+      </project>
       ```
-      spring-boot-starter-前缀的都是Spring Boot起步依赖，它们都有助于Spring Boot应用程序的构建。
+
+      spring-boot-starter-前缀的都是 Spring Boot 起步依赖，它们都有助于 Spring Boot 应用程序的构建。
+
   - ### 2.2 使用起步依赖
+
+    在构建文件里指定功能，让构建过程自己搞明白我们要什么东西，这正是 Spring Boot 起步依赖的功能。
+
+    - #### 2.2.1 指定基于功能的依赖
+
+    ```cmd
+    # 查看关系树
+    $ gradle dependencies
+    $ mvn dependency:tree
+    ```
+
+    - #### 2.2.2 覆盖起步依赖引入的传递依赖
+      为你的项目瘦身
+
+    ```gradle
+    // 在Gradle中，你可以这样排除传递依赖
+    compile("org.springframework.boot:spring-boot-starter-web") {
+        exclude group: 'com.fasterxml.jackson.core'
+    }
+    ```
+
+    ```xml
+    // 在Maven中，你可以这样排除传递依赖
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>com.fasterxml.jackson.core</groupId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    ```
+
+    如果你需要指定依赖版本
+
+    ```gradle
+    compile("com.fasterxml.jackson.core:jackson-databind:2.4.3")
+    ```
+
+    ```xml
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.4.3</version>
+    </dependency>
+    ```
+
+  - ### 2.3 使用自动配置
+
+    Spring Boot 的自动配置会在应**用程序启动**时，考虑了众多因素，才决定 Spring 配置应该用哪个，不该用哪个。每当应用程序启动的时候，Spring Boot 的自动配置都要做将近 200 个这样的决定，涵盖安全、集成、持久化、Web 开发等诸多方面。所有这些自动配置就是为了尽量不让你自己写配置
+    例如：
+
+    1. 如果在 classpath 路径下的 JdbcTemplate 是否可用？如果存在 DataSource bean，将会自动配置一个 JdbcTemplate bean
+    2. classpath 下是否存在 Thymeleaf？如果存在，将自动配置一个 Thymeleaf 模板 resolver、view resolver 和 template engine。
+    3. classpath 下是否存在 Spring Security？如果存在，配置一个基本 web 安全模式。
+
+    - #### 2.3.1 专注于应用程序功能
+
+    1. 定义领域模型
+
+    ```java
+    // /src/main/java/readinglist/Book.java
+    package readinglist;
+
+    import javax.persistence.Entity;
+    import javax.persistence.GeneratedValue;
+    import javax.persistence.GenerationType;
+    import javax.persistence.Id;
+
+    @Entity
+    public class Book {
+        @Id
+        @GeneratedValue(strategy=GenerationType.AUTO)
+        private Long id;
+        private String reader;
+        private String isbn;
+        private String title;
+        private String author;
+        private String description;
+
+        public Long getId() {
+            return id;
+        }
+        public void setId(Long id) {
+            this.id = id;
+        }
+        public String getReader() {
+            return reader;
+        }
+        public void setReader(String reader) {
+            this.reader = reader;
+        }
+        public String getIsbn() {
+            return isbn;
+        }
+        public void setIsbn(String isbn) {
+            this.isbn = isbn;
+        }
+        public String getTitle() {
+            return title;
+        }
+        public void setTitle(String title) {
+            this.title = title;
+        }
+        public String getAuthor() {
+            return author;
+        }
+        public void setAuthor(String author) {
+            this.author = author;
+        }
+        public String getDescription() {
+            return description;
+        }
+        public void setDescription(String description) {
+            this.description = description;
+        }
+    }
+    ```
+
+    - @Entity 注解表明它是一个 JPA 实体
+    - id 属性加了@Id 和@GeneratedValue 注解，说明这个字段是实体的唯一标识，并且这个字段的值是自动生成的
+
+    2. 定义仓库接口
+
+    ```java
+    // /src/main/java/readinglist/ReadingListRepository.java
+    package readinglist;
+
+    import java.util.List;
+    import org.springframework.data.jpa.repository.JpaRepository;
+
+    public interface ReadingListRepository extends JpaRepository<Book, Long> {
+        List<Book> findByReader(String reader);
+    }
+    ```
+
+    - 通过扩展 JpaRepository，ReadingListRepository 直接继承了 18 个执行常用持久化操作的方法
+    - JpaRepository 是个泛型接口，有两个参数：仓库操作的领域对象类型，及其 ID 属性的类型
+    - findByReader(): 根据读者的用户名来查找阅读列表
+
+    3. 创建 Web 界面
+       控制器
+
+    ```java
+    // /src/main/java/readinglist/ReadingListController.java
+    package readinglist;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Controller;
+    import org.springframework.ui.Model;
+    import org.springframework.web.bind.annotation.PathVariable;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RequestMethod;
+    import java.util.List;
+
+    @Controller
+    @RequestMapping("/")
+    public class ReadingListController {
+        private ReadingListRepository readingListRepository;
+
+        @Autowired
+        public ReadingListController(ReadingListRepository readingListRepository) {// 注入
+            this.readingListRepository = readingListRepository;
+        }
+
+        @RequestMapping(value="/{reader}", method=RequestMethod.GET)
+        public String readersBooks(@PathVariable("reader") String reader, Model model) {
+            List<Book> readingList =
+            readingListRepository.findByReader(reader);
+            if (readingList != null) {
+                model.addAttribute("books", readingList);
+            }
+            return "readingList";
+        }
+
+        @RequestMapping(value="/{reader}", method=RequestMethod.POST)
+        public String addToReadingList(@PathVariable("reader") String reader, Book book) {
+            book.setReader(reader);
+            readingListRepository.save(book);
+            return "redirect:/{reader}";
+        }
+    }
+    ```
+
+    - @Controller: 组件扫描会自动将其注册为 Spring 应用程序上下文里的一个 Bean
+    - @RequestMapping: 将其中所有的处理器方法都映射到了“/”这个 URL 路径上
+    - @RequestMapping(value="/{reader}", method=RequestMethod.POST): 指定 url 和 method 的处理器
+    - @PathVariable("reader"): 接受指定的路径参数
+
+    在src/main/resources/templates里添加模板
+
+    ```html
+    <!--  src/main/resources/templates/readingList.html -->
+    <html>
+        <head>
+            <title>Reading List</title>
+            <link rel="stylesheet" th:href="@{/style.css}"></link>
+        </head>
+        <body>
+            <h2>Your Reading List</h2>
+            <div th:unless="${#lists.isEmpty(books)}">
+                <dl th:each="book : ${books}">
+                    <dt class="bookHeadline">
+                        <span th:text="${book.title}">Title</span> by
+                        <span th:text="${book.author}">Author</span>
+                        (ISBN: <span th:text="${book.isbn}">ISBN</span>)
+                    </dt>
+                    <dd class="bookDescription">
+                        <span th:if="${book.description}" th:text="${book.description}">Description</span>
+                        <span th:if="${book.description eq null}">No description available</span>
+                    </dd>
+                </dl>
+            </div>
+            <div th:if="${#lists.isEmpty(books)}">
+                <p>You have no books in your book list</p>
+            </div>
+            <hr/>
+            <h3>Add a book</h3>
+            <form method="POST">
+                <label for="title">Title:</label>
+                <input type="text" name="title" size="50"></input><br/>
+                <label for="author">Author:</label>
+                <input type="text" name="author" size="50"></input><br/>
+                <label for="isbn">ISBN:</label>
+                <input type="text" name="isbn" size="15"></input><br/>
+                <label for="description">Description:</label><br/>
+                <textarea name="description" cols="80" rows="5">
+                </textarea><br/>
+                <input type="submit"></input>
+            </form>
+        </body>
+    </html>
+    ```
+    在src/main/resources/static中添加样式
+    ```css
+    /* src/main/resources/static/style.css */
+    body {
+        background-color: #cccccc;
+        font-family: arial,helvetica,sans-serif;
+    }
+    .bookHeadline {
+        font-size: 12pt;
+        font-weight: bold;
+    }
+    .bookDescription {
+        font-size: 10pt;
+    }
+    label {
+        font-weight: bold;
+    }
+    ```
+    - #### 2.3.2 运行应用程序
+    - #### 2.3.4 刚刚发生了什么
+        在添加Spring Boot到应用程序中时，会添加spring-boot-autoconfigure.jar，它包含大量地配置类。这些配置类在应用程序的classpath环境都可用，除非你明确指定了这些配置覆盖它们。那些实现对这些配置类中的配置的覆盖呢？——使用条件注解@Condition 例如在应用程序中指定了JdbcTemplate，就会使用用户自定义，否则使用默认配置类中的JdbcTemplate。实现这一目标的自定义Condition注解如下：
+        ```java
+        package readinglist;
+        import org.springframework.context.annotation.Condition;
+        import org.springframework.context.annotation.ConditionContext;
+        import org.springframework.core.type.AnnotatedTypeMetadata;
+
+        public class JdbcTemplateCondition implements Condition {
+            @Override
+            public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+                try {
+                    context.getClassLoader().loadClass("org.springframework.jdbc.core.JdbcTemplate");
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }
+        ```
+
+        ```java
+        // 如果在classpath路径下JdbcTemplate可用，就会创建MyService bean，否则不创建。
+        @Conditional(JdbcTemplateCondition.class)
+        public MyService myService() {
+            //...
+        }
+        ```
+        ##### Spring Boot定义了很多这样的条件化注解(Conditional 依附 依赖)
+        |  条件化注解   | 条件化注解  |
+        |  ----  | ----  |
+        |@ConditionalOnBean             |配置了某个特定Bean 
+        |@ConditionalOnMissingBean      |没有配置特定的Bean 
+        |@ConditionalOnClass            |Classpath里有指定的类
+        |@ConditionalOnMissingClass     |Classpath里缺少指定的类
+        |@ConditionalOnExpression       |给定的Spring Expression Language（SpEL）表达式计算结果为true
+        |@ConditionalOnJava             |Java的版本匹配特定值或者一个范围值
+        |@ConditionalOnJndi             |参数中给定的JNDI位置必须存在一个，如果没有给参数，则要有JNDI InitialContext
+        |@ConditionalOnProperty         |指定的配置属性要有一个明确的值
+        |@ConditionalOnResource         |Classpath里有指定的资源
+        |@ConditionalOnWebApplication   |这是一个Web应用程序
+        |@ConditionalOnNotWebApplication|这不是一个Web应用程序
+
+        举例说明
+        ```java
+        @Configuration // 只是一个配置类
+        @ConditionalOnClass({ DataSource.class, EmbeddedDatabaseType.class }) // 依附于 DataSource.class 和 EmbeddedDatabaseType.class
+        @EnableConfigurationProperties(DataSourceProperties.class) // 指定的配置的属性生效
+        @Import({ Registrar.class, DataSourcePoolMetadataProvidersConfiguration.class }) // 导入 Registrar.class 和 DataSourcePoolMetadataProvidersConfiguration.class
+        public class DataSourceAutoConfiguration { 
+            ... 
+        }
+        ```
