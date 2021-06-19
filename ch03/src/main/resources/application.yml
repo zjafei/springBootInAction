@@ -1,0 +1,26 @@
+# 配置文件的位置
+# (1) 外置，在相对于应用程序运行目录的/config子目录里。
+# (2) 外置，在应用程序运行的目录里。
+# (3) 内置，在config包内。
+# (4) 内置，在Classpath根目录。
+# 配置文件的优先级 
+# /config > / > 内置 config > Classpath根目录 同目录的 application.yml > application.properties
+
+spring:
+    main:
+        banner-mode: off
+    
+    # thymeleaf:
+        # cache: false # 禁用模板缓存
+
+logging:
+    file:
+        path: logs/ 
+        name: BookWorm.log 
+    # level:
+    #     root: WARN
+    #     org:
+    #         springframework:
+    #             security: DEBUG
+server:
+    port: 8000
